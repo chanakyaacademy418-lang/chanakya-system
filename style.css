@@ -1,0 +1,86 @@
+:root {
+    --navy: #1a3a63;
+    --gold: #c5a021;
+    --cream: #fffdf5;
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
+body { 
+    font-family: 'Segoe UI', sans-serif; 
+    background: #f0f2f5; 
+    margin: 0; 
+}
+
+.admin-panel { max-width: 1200px; margin: 20px auto; padding: 20px; }
+
+header { 
+    text-align: center; 
+    margin-bottom: 30px; 
+    border-bottom: 3px solid var(--gold);
+    padding-bottom: 10px;
+}
+
+.logo { width: 120px; margin-bottom: 10px; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+
+.card { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 15px var(--shadow); 
+}
+
+input, select { 
+    width: 100%; padding: 12px; margin: 10px 0; 
+    border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; 
+}
+
+.btn-primary { 
+    background: var(--navy); color: white; border: none; 
+    padding: 15px; width: 100%; border-radius: 6px; 
+    cursor: pointer; font-weight: bold; transition: 0.3s;
+}
+
+.student-list { 
+    margin-top: 15px; max-height: 350px; overflow-y: auto; 
+    border: 1px solid #eee; border-radius: 6px; 
+}
+
+.student-item { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+.student-item:hover { background: #f8faff; border-left: 4px solid var(--gold); }
+
+/* CERTIFICATE STYLING */
+.cert-wrapper { margin-top: 50px; text-align: center; overflow-x: auto; }
+
+.certificate {
+    width: 1000px; height: 700px; background: var(--cream);
+    margin: 20px auto; position: relative; border: 12px solid var(--navy);
+    padding: 15px; box-sizing: border-box; color: var(--navy);
+}
+
+.cert-content {
+    border: 5px double var(--gold); height: 100%; padding: 40px;
+    box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+}
+
+.cert-header { font-size: 48px; font-weight: bold; }
+.cert-title { 
+    font-size: 36px; color: var(--gold); text-transform: uppercase; 
+    margin: 25px 0; border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold);
+    padding: 10px 40px;
+}
+
+.student-name { 
+    font-size: 55px; margin: 20px 0; font-family: 'Georgia', serif; 
+    text-decoration: underline; text-underline-offset: 10px;
+}
+
+.signature-block { position: absolute; bottom: 60px; right: 80px; text-align: center; }
+.signature { font-family: 'cursive'; font-size: 30px; }
+.signature-line { border-top: 2px solid var(--navy); width: 200px; margin: 5px auto; }
+
+.btn-download {
+    background: #28a745; color: white; border: none; padding: 15px 30px;
+    font-size: 18px; border-radius: 50px; cursor: pointer; font-weight: bold;
+}
