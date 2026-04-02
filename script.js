@@ -18,7 +18,7 @@ const certContainer = document.getElementById("cert-container");
 // Load Data
 async function loadData() {
     try {
-        const snap = await db.collection("students").orderBy("createdAt", "desc").get();
+        const snap = await db.collection("students").get();
         students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         render(students);
     } catch (error) {
