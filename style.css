@@ -1,86 +1,176 @@
+/* 
+    Chanakya Academy | Premium Certificate System 
+    Optimized for Vertical Mobile Display (Redmi 7 Pro)
+*/
+
 :root {
-    --navy: #1a3a63;
+    --navy: #0d2b52;
     --gold: #c5a021;
     --cream: #fffdf5;
-    --shadow: rgba(0, 0, 0, 0.1);
+    --white: #ffffff;
 }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body { 
-    font-family: 'Segoe UI', sans-serif; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
     background: #f0f2f5; 
     margin: 0; 
+    padding: 10px;
 }
 
-.admin-panel { max-width: 1200px; margin: 20px auto; padding: 20px; }
+.admin-panel { max-width: 1000px; margin: 0 auto; }
 
 header { 
     text-align: center; 
-    margin-bottom: 30px; 
-    border-bottom: 3px solid var(--gold);
-    padding-bottom: 10px;
+    padding: 15px; 
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    border-bottom: 4px solid var(--gold);
 }
 
-.logo { width: 120px; margin-bottom: 10px; }
+header h1 { margin: 0; color: var(--navy); font-size: 24px; }
 
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+/* Grid Layout: Stacks vertically on phones */
+.grid { 
+    display: grid; 
+    grid-template-columns: 1fr; 
+    gap: 20px; 
+}
+
+@media (min-width: 800px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+}
 
 .card { 
-    background: white; 
-    padding: 25px; 
-    border-radius: 12px; 
-    box-shadow: 0 4px 15px var(--shadow); 
+    background: var(--white); 
+    padding: 20px; 
+    border-radius: 15px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
+.card h2 { margin-top: 0; font-size: 18px; color: var(--navy); }
+
 input, select { 
-    width: 100%; padding: 12px; margin: 10px 0; 
-    border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; 
+    width: 100%; 
+    padding: 12px; 
+    margin: 8px 0; 
+    border: 1px solid #ccc; 
+    border-radius: 8px; 
+    font-size: 16px; /* Prevents auto-zoom on iOS/Android */
 }
 
 .btn-primary { 
-    background: var(--navy); color: white; border: none; 
-    padding: 15px; width: 100%; border-radius: 6px; 
-    cursor: pointer; font-weight: bold; transition: 0.3s;
+    background: var(--navy); 
+    color: white; 
+    border: none; 
+    padding: 15px; 
+    width: 100%; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-size: 16px;
+    margin-top: 10px;
 }
 
+/* Scrollable Student List */
 .student-list { 
-    margin-top: 15px; max-height: 350px; overflow-y: auto; 
-    border: 1px solid #eee; border-radius: 6px; 
+    margin-top: 10px; 
+    max-height: 250px; 
+    overflow-y: auto; 
+    border: 1px solid #eee; 
 }
 
-.student-item { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-.student-item:hover { background: #f8faff; border-left: 4px solid var(--gold); }
+.student-item { 
+    padding: 12px; 
+    border-bottom: 1px solid #eee; 
+}
 
-/* CERTIFICATE STYLING */
-.cert-wrapper { margin-top: 50px; text-align: center; overflow-x: auto; }
+/* --- THE CERTIFICATE (SCALED FOR VERTICAL MOBILE) --- */
+.cert-wrapper { 
+    margin-top: 30px; 
+    width: 100%;
+    overflow: hidden; /* Prevents horizontal scroll */
+    text-align: center;
+}
 
 .certificate {
-    width: 1000px; height: 700px; background: var(--cream);
-    margin: 20px auto; position: relative; border: 12px solid var(--navy);
-    padding: 15px; box-sizing: border-box; color: var(--navy);
+    width: 1000px; /* Internal resolution stays high */
+    height: 700px; 
+    background: var(--cream);
+    position: relative; 
+    border: 12px solid var(--navy);
+    box-sizing: border-box; 
+    color: var(--navy); 
+    margin: 0 auto;
 }
 
-.cert-content {
-    border: 5px double var(--gold); height: 100%; padding: 40px;
-    box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+/* The Secret for Vertical Mobile: */
+@media (max-width: 1000px) {
+    .certificate {
+        /* This shrinks the VISUAL size to fit your phone screen 
+           without changing the actual 1000px dimensions */
+        transform: scale(0.32); 
+        transform-origin: top center;
+        margin-bottom: -450px; /* Pulls the download button up */
+    }
 }
+
+@media (max-width: 400px) {
+    .certificate {
+        transform: scale(0.28); 
+        margin-bottom: -480px;
+    }
+}
+
+/* Certificate Internal Design */
+.cert-content {
+    padding: 40px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 5;
+}
+
+.corner-decoration { position: absolute; width: 300px; height: 150px; z-index: 1; }
+.top-left { top: -30px; left: -70px; background: var(--navy); transform: rotate(-15deg); border-bottom: 8px solid var(--gold); }
+.bottom-right { bottom: -30px; right: -70px; background: var(--navy); transform: rotate(-15deg); border-top: 8px solid var(--gold); }
 
 .cert-header { font-size: 48px; font-weight: bold; }
 .cert-title { 
-    font-size: 36px; color: var(--gold); text-transform: uppercase; 
-    margin: 25px 0; border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold);
-    padding: 10px 40px;
+    font-size: 34px; color: var(--gold); 
+    border-top: 2px solid var(--gold); 
+    border-bottom: 2px solid var(--gold); 
+    padding: 5px 40px; margin: 20px 0; 
 }
 
-.student-name { 
-    font-size: 55px; margin: 20px 0; font-family: 'Georgia', serif; 
-    text-decoration: underline; text-underline-offset: 10px;
+.student-name { font-size: 60px; font-family: Georgia, serif; margin: 15px 0; }
+.course-detail { font-size: 30px; font-weight: bold; }
+
+.gold-seal {
+    position: absolute; bottom: 100px; left: 100px;
+    width: 90px; height: 90px; border-radius: 50%;
+    background: radial-gradient(circle, #fff, var(--gold));
+    border: 2px dashed #8c6d05;
 }
 
-.signature-block { position: absolute; bottom: 60px; right: 80px; text-align: center; }
-.signature { font-family: 'cursive'; font-size: 30px; }
-.signature-line { border-top: 2px solid var(--navy); width: 200px; margin: 5px auto; }
+.signature-block { 
+    position: absolute; bottom: 80px; right: 100px; 
+    text-align: center; font-size: 20px; 
+}
+.signature-line { border-top: 2px solid var(--navy); width: 200px; margin-bottom: 5px; }
 
-.btn-download {
-    background: #28a745; color: white; border: none; padding: 15px 30px;
-    font-size: 18px; border-radius: 50px; cursor: pointer; font-weight: bold;
+.btn-download { 
+    background: #28a745; 
+    color: white; 
+    padding: 15px 30px; 
+    font-size: 18px; 
+    border-radius: 50px; 
+    border: none; 
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
