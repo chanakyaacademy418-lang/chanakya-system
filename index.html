@@ -6,31 +6,45 @@
     <title>Chanakya Academy | Certificate System</title>
     <link rel="stylesheet" href="style.css">
     <!-- Libraries -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
 <div class="admin-panel">
     <header>
-        <img src="logo.png" alt="Logo" class="logo">
         <h1>Chanakya Academy</h1>
-        <p>Certificate Management System</p>
+        <p>Certificate Generater</p>
     </header>
 
     <div class="grid">
-        <!-- Input Section -->
         <div class="card">
-            <h2><i class="icon">📝</i> Manual Entry</h2>
+            <h2>📝 Manual Entry</h2>
             <div class="form-group">
                 <input id="name" placeholder="Student Full Name">
-                <input id="level" placeholder="Level (e.g. Foundation Level 1)">
-                <input id="date" placeholder="Date (e.g. 10 April 2026)">
+                
+                <!-- Updated Level Dropdown -->
+                <select id="level">
+                    <option value="" disabled selected>Select Level</option>
+                    <option value="Foundation Level">Foundation Level</option>
+                    <option value="Level 1">Level 1</option>
+                    <option value="Level 2">Level 2</option>
+                    <option value="Level 3">Level 3</option>
+                    <option value="Level 4">Level 4</option>
+                    <option value="Level 5">Level 5</option>
+                    <option value="Level 6">Level 6</option>
+                    <option value="Level 7">Level 7</option>
+                    <option value="Level 8">Level 8</option>
+                </select>
+
+                <!-- Proper Calendar Date Input -->
+                <input type="date" id="date">
+                
                 <input id="code" placeholder="Student ID (ABX-10293)">
                 <input id="marks" placeholder="Marks/Grade">
+                
                 <select id="course">
                     <option value="Abacus">Abacus</option>
                     <option value="Vedic Maths">Vedic Maths</option>
@@ -39,20 +53,15 @@
             </div>
         </div>
 
-        <!-- Bulk & Search -->
         <div class="card">
-            <h2><i class="icon">📁</i> Bulk Upload & Search</h2>
-            <input type="file" id="csvFile" class="file-input">
-            <hr>
-            <input id="searchBox" oninput="searchData()" placeholder="🔍 Search by name or ID..." class="search-input">
+            <h2>🔍 Search Records</h2>
+            <input id="searchBox" oninput="searchData()" placeholder="Search by name or ID..." class="search-input">
             <div id="list" class="student-list"></div>
         </div>
     </div>
 
-    <!-- CERTIFICATE PREVIEW SECTION -->
     <div id="cert-container" class="cert-wrapper" style="display:none;">
         <div id="certificate" class="certificate">
-            <!-- Decorative Elements -->
             <div class="corner-decoration top-left"></div>
             <div class="corner-decoration bottom-right"></div>
             
@@ -61,7 +70,7 @@
                 <div class="cert-tagline">Abacus & Vedic Maths Classes</div>
                 <div class="cert-motto">“The Brain Gym!”</div>
 
-                <div class="cert-title">Certificate <span>of</span> Achievement</div>
+                <div class="cert-title">CERTIFICATE <span>of</span> ACHIEVEMENT</div>
                 
                 <p class="cert-text">This is to certify that</p>
                 <h2 id="cname" class="student-name"></h2>
@@ -73,23 +82,20 @@
                     <p>dated on <strong id="cdate"></strong></p>
                 </div>
 
-                <div class="seal-area">
-                    <div class="gold-seal"></div>
-                </div>
+                <div class="gold-seal"></div>
 
                 <div class="signature-block">
-                    <div class="signature">Archana Kakde</div>
                     <div class="signature-line"></div>
-                    <div class="designation">Director</div>
+                    <div class="designation">Director<br>Archana Kakde</div>
                 </div>
 
                 <div class="cert-footer">
-                    <span>Certificate ID: <small id="ccertid">CERT-2026-00123</small></span>
+                    <span>Certificate ID: <small id="ccertid"></small></span>
                     <span>Student ID: <small id="ccode"></small></span>
                 </div>
             </div>
         </div>
-        <button onclick="downloadPDF()" class="btn-download">📥 Download Professional PDF</button>
+        <button onclick="downloadPDF()" class="btn-download">📥 Download for Printing</button>
     </div>
 </div>
 
