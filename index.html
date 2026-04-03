@@ -8,96 +8,143 @@
     <!-- Libraries -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
-<div class="admin-panel">
-    <header>
-        <h1>Chanakya Academy</h1>
-        <p>Certificate Generator</p>
-    </header>
+<header>
+    <div class="header-content">
+        <h1>CHANAKYA ACADEMY</h1>
+        <p>Premium Certificate Management System</p>
+    </div>
+</header>
 
+<main class="container">
     <div class="grid">
-        <!-- Input Section -->
-        <div class="card">
+        <!-- Section 1: Manual Entry -->
+        <section class="card">
             <h2>📝 Manual Entry</h2>
-            <div class="form-group">
-                <input id="name" placeholder="Student Full Name">
-                
+            <div class="form-grid">
+                <input type="text" id="name" placeholder="Student Full Name">
+                <div class="input-prefix">
+                    <span>CA</span>
+                    <input type="number" id="code" placeholder="001">
+                </div>
                 <select id="level">
                     <option value="" disabled selected>Select Level</option>
                     <option value="Foundation Level">Foundation Level</option>
-                    <option value="Level 1">Level 1</option>
-                    <option value="Level 2">Level 2</option>
-                    <option value="Level 3">Level 3</option>
-                    <option value="Level 4">Level 4</option>
-                    <option value="Level 5">Level 5</option>
-                    <option value="Level 6">Level 6</option>
-                    <option value="Level 7">Level 7</option>
-                    <option value="Level 8">Level 8</option>
+                    <script>
+                        for(let i=1; i<=8; i++) document.write(`<option value="Level ${i}">Level ${i}</option>`);
+                    </script>
                 </select>
-
-                <label style="font-size: 12px; color: #0d2b52; display: block; margin-top: 10px;">Issue Date:</label>
-                <input type="date" id="date">
-                
-                <input id="code" placeholder="Student ID (e.g. ABX-10293)">
-                <input id="marks" placeholder="Marks/Grade (Optional)">
-                
                 <select id="course">
                     <option value="Abacus">Abacus</option>
                     <option value="Vedic Maths">Vedic Maths</option>
                 </select>
-                <button onclick="addStudent()" class="btn-primary">Add & Save Student</button>
+                <input type="text" id="marks" placeholder="Marks (Optional)">
+                <input type="date" id="date">
             </div>
-        </div>
+            <button onclick="addStudentManual()" class="btn-primary">Generate & Save</button>
+        </section>
 
-        <!-- Search Section -->
-        <div class="card">
-            <h2>🔍 Search Records</h2>
-            <input id="searchBox" oninput="searchData()" placeholder="Search by name or ID..." class="search-input">
-            <div id="list" class="student-list"></div>
-        </div>
+        <!-- Section 2: Excel Upload -->
+        <section class="card">
+            <h2>📊 Excel Batch Upload</h2>
+            <div class="upload-area" id="dropZone">
+                <input type="file" id="excelFile" accept=".xlsx, .xls" hidden>
+                <p>Click to upload or drag & drop .xlsx</p>
+                <button onclick="document.getElementById('excelFile').click()" class="btn-secondary">Select File</button>
+            </div>
+            <div id="excelPreview" class="preview-list" style="display:none;">
+                <h3>Pending Uploads (<span id="batchCount">0</span>)</h3>
+                <div class="list-container" id="pendingList"></div>
+                <button onclick="saveBatch()" class="btn-success">Upload All to Cloud</button>
+            </div>
+        </section>
     </div>
 
-    <!-- Certificate Preview -->
-    <div id="cert-container" class="cert-wrapper" style="display:none;">
-        <div id="certificate" class="certificate">
-            <div class="corner-decoration top-left"></div>
-            <div class="corner-decoration bottom-right"></div>
-            
-            <div class="cert-content">
-                <div class="cert-header">CHANAKYA ACADEMY</div>
-                <div class="cert-tagline">Abacus & Vedic Maths Classes</div>
-                <div class="cert-motto">“The Brain Gym!”</div>
+    <!-- Section 3: History & Search -->
+    <section class="card history-section">
+        <div class="history-header">
+            <h2>📜 Issued Certificates</h2>
+            <input type="text" id="searchBox" placeholder="Search by name, code, or date..." oninput="handleSearch()">
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Student Name</th>
+                        <th>Level</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTable"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
 
-                <div class="cert-title">CERTIFICATE <span>of</span> ACHIEVEMENT</div>
+<!-- Certificate Preview Modal -->
+<div id="certModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div id="capture-area">
+            <div id="certificate" class="certificate-template">
+                <!-- Faithfully replicated design via CSS -->
+                <div class="wave-top"></div>
+                <div class="wave-bottom"></div>
+                <div class="gold-border-inner"></div>
                 
-                <p class="cert-text">This is to certify that</p>
-                <h2 id="cname" class="student-name"></h2>
-
-                <p class="cert-text">has successfully completed</p>
-                <h3 id="clevel_display" class="course-detail"></h3>
-
-                <div class="cert-meta">
-                    <p>dated on <strong id="cdate"></strong></p>
-                </div>
-
-                <div class="gold-seal"></div>
-
-                <div class="signature-block">
-                    <div class="signature-line"></div>
-                    <div class="designation">Director<br>Archana Kakde</div>
-                </div>
-
-                <div class="cert-footer">
-                    <span>Certificate ID: <small id="ccertid"></small></span>
-                    <span>Student ID: <small id="ccode"></small></span>
+                <div class="cert-body">
+                    <div class="logo-area">
+                        <div class="academy-logo">
+                            <div class="logo-inner">🎓</div>
+                        </div>
+                    </div>
+                    
+                    <h1 class="academy-name">CHANAKYA ACADEMY</h1>
+                    <p class="academy-sub">Abacus & Vedic Maths Classes</p>
+                    <p class="academy-motto">"The Brain Gym!"</p>
+                    
+                    <div class="cert-title-container">
+                        <h2 class="cert-main-title">CERTIFICATE <span>of</span> ACHIEVEMENT</h2>
+                    </div>
+                    
+                    <p class="cert-intro">This is to certify that</p>
+                    <h3 id="display-name" class="display-name">NANDINI KAKADE</h3>
+                    
+                    <p class="cert-intro">has successfully completed</p>
+                    <h4 id="display-level" class="display-level">Level 1 in Abacus</h4>
+                    
+                    <p class="cert-date-line">dated on <span id="display-date">10th April 2026</span></p>
+                    
+                    <div class="cert-footer-row">
+                        <div class="footer-item">
+                            <div class="seal-gold"></div>
+                        </div>
+                        <div class="footer-item signature-section">
+                            <p class="sig-name">Archana Kakde</p>
+                            <div class="sig-line"></div>
+                            <p class="sig-title">Director</p>
+                        </div>
+                    </div>
+                    
+                    <div class="id-bar">
+                        <span>Certificate ID: <b id="display-cert-id">CERT-2026-001</b></span>
+                        <span>Student ID: <b id="display-student-id">CA001</b></span>
+                    </div>
                 </div>
             </div>
         </div>
-        <button onclick="downloadPDF()" class="btn-download">📥 Download for Printing</button>
+        
+        <div class="download-actions">
+            <button onclick="downloadOutput('pdf')" class="btn-pdf">Download PDF (High Quality)</button>
+            <button onclick="downloadOutput('jpg')" class="btn-jpg">Download JPG</button>
+        </div>
     </div>
 </div>
 
@@ -105,4 +152,3 @@
 </body>
 </html>
 
-</html>
