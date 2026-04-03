@@ -1,96 +1,200 @@
-// 1. Firebase Config
+// 1. Firebase Configuration (Compat Mode)
 const firebaseConfig = {
     apiKey: "AIzaSyBeB6h9G7YwMhDodIPpoZIHaNyDu6-IERs",
     authDomain: "chanakya-certificates.firebaseapp.com",
     projectId: "chanakya-certificates",
-    storageBucket: "chanakya-certificates.firebasestorage.app",
+    storageBucket: "chanakya-certificates.appspot.com",
     messagingSenderId: "1020718754886",
     appId: "1:1020718754886:web:8e02b20b25e526b6cdae47"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-let students = [];
 
-// 2. Load Data
-async function loadData() {
-    try {
-        const snap = await db.collection("students").get();
-        students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        render(students);
-    } catch (e) { console.error(e); }
-}
+// State
+let allStudents = [];
 
-function render(data) {
-    const list = document.getElementById("list");
-    if (data.length === 0) { list.innerHTML = "<p style='padding:10px;'>No records.</p>"; return; }
-    list.innerHTML = data.sort((a,b) => a.name.localeCompare(b.name)).map(s => `
-        <div class="student-item" onclick="preview('${s.id}')">
-            <strong>${s.name}</strong><br><small>${s.code} | ${s.level}</small>
-        </div>
-    `).join("");
-}
+// 2. Formatting Helpers
+const toTitleCase = (str) => {
+    return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
 
-// 3. Add Student
-async function addStudent() {
-    const data = {
-        name: document.getElementById("name").value.trim(),
-        level: document.getElementById("level").value,
-        date: document.getElementById("date").value,
-        code: document.getElementById("code").value.trim(),
-        course: document.getElementById("course").value,
-        createdAt: Date.now()
+const formatCertDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'long' });
+    const year = date.getFullYear();
+
+    const suffix = (d) => {
+        if (d > 3 && d < 21) return 'th';
+        switch (d % 10) {
+            case 1: return "st";
+            case 2: return "nd";
+            case 3: return "rd";
+            default: return "th";
+        }
+    };
+    return `${day}${suffix(day)} ${month} ${year}`;
+};
+
+const generateCertID = (code) => {
+    const year = new Date().getFullYear();
+    return `CERT-${year}-${code.padStart(3, '0')}`;
+};
+
+// 3. Core Logic: Add Manual
+async function addStudentManual() {
+    const nameInput = document.getElementById('name').value;
+    const codeNum = document.getElementById('code').value;
+    const level = document.getElementById('level').value;
+    const course = document.getElementById('course').value;
+    const date = document.getElementById('date').value;
+
+    if(!nameInput || !codeNum || !level || !date) return alert("Please fill all required fields");
+
+    const studentData = {
+        name: toTitleCase(nameInput),
+        code: `CA${codeNum.padStart(3, '0')}`,
+        level: level,
+        course: course,
+        date: date,
+        certId: generateCertID(codeNum),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    if (!data.name || !data.level || !data.date || !data.code) return alert("Fill all fields!");
-
     try {
-        await db.collection("students").add(data);
-        alert("Saved!");
-        document.getElementById("name").value = "";
-        document.getElementById("code").value = "";
-        loadData();
-    } catch (e) { alert("Error saving."); }
+        await db.collection("students").add(studentData);
+        showPreview(studentData);
+        loadHistory();
+    } catch (e) {
+        console.error("Error saving: ", e);
+    }
 }
 
-// 4. Preview & Format Date
-function preview(id) {
-    const s = students.find(x => x.id === id);
-    if (!s) return;
+// 4. Excel Logic
+document.getElementById('excelFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+        
+        processExcelRows(rows);
+    };
+    reader.readAsBinaryString(file);
+});
 
-    const d = new Date(s.date);
-    const formattedDate = d.toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' });
+function processExcelRows(rows) {
+    const previewList = document.getElementById('pendingList');
+    previewList.innerHTML = '';
+    
+    window.pendingBatch = rows.map(row => ({
+        name: toTitleCase(row.Name || ""),
+        code: `CA${String(row.Code || 0).padStart(3, '0')}`,
+        level: row.Level === 'level 0' ? 'Foundation Level' : toTitleCase(row.Level || ""),
+        course: row.Course || "Abacus",
+        date: row.Date || new Date().toISOString().split('T')[0],
+        certId: generateCertID(String(row.Code || 0))
+    }));
 
-    document.getElementById("cname").innerText = s.name.toUpperCase();
-    document.getElementById("clevel_display").innerText = `${s.level} in ${s.course}`;
-    document.getElementById("cdate").innerText = formattedDate;
-    document.getElementById("ccode").innerText = s.code;
-    document.getElementById("ccertid").innerText = `CERT-2026-${s.code.split('-').pop()}`;
+    document.getElementById('excelPreview').style.display = 'block';
+    document.getElementById('batchCount').innerText = window.pendingBatch.length;
 
-    document.getElementById("cert-container").style.display = "block";
-    document.getElementById("cert-container").scrollIntoView({ behavior: 'smooth' });
+    window.pendingBatch.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'student-item-mini';
+        div.innerHTML = `<b>${s.name}</b> - ${s.code}`;
+        previewList.appendChild(div);
+    });
 }
 
-// 5. Search
-function searchData() {
-    const term = document.getElementById("searchBox").value.toLowerCase();
-    render(students.filter(s => s.name.toLowerCase().includes(term) || s.code.toLowerCase().includes(term)));
+async function saveBatch() {
+    const btn = document.querySelector('.btn-success');
+    btn.innerText = "Saving...";
+    const batch = db.batch();
+    
+    window.pendingBatch.forEach(data => {
+        const ref = db.collection("students").doc();
+        batch.set(ref, { ...data, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+    });
+
+    await batch.commit();
+    alert("Batch Uploaded!");
+    document.getElementById('excelPreview').style.display = 'none';
+    loadHistory();
 }
 
-// 6. PDF Download
-async function downloadPDF() {
-    const btn = document.querySelector(".btn-download");
-    btn.innerText = "Generating...";
-    const canvas = await html2canvas(document.getElementById("certificate"), { scale: 3 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jspdf.jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-    pdf.addImage(imgData, "PNG", 0, 0, 297, 210);
-    pdf.save(`${document.getElementById("cname").innerText}.pdf`);
-    btn.innerText = "📥 Download for Printing";
+// 5. History & Search
+async function loadHistory() {
+    const snapshot = await db.collection("students").orderBy("timestamp", "desc").get();
+    allStudents = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+    renderTable(allStudents);
 }
 
-// 7. Initialize with Today's Date
+function renderTable(data) {
+    const tbody = document.getElementById('historyTable');
+    tbody.innerHTML = data.map(s => `
+        <tr>
+            <td>${s.code}</td>
+            <td>${s.name}</td>
+            <td>${s.level}</td>
+            <td>${s.date}</td>
+            <td><button onclick="viewFromHistory('${s.id}')">View</button></td>
+        </tr>
+    `).join('');
+}
+
+function handleSearch() {
+    const term = document.getElementById('searchBox').value.toLowerCase();
+    const filtered = allStudents.filter(s => 
+        s.name.toLowerCase().includes(term) || 
+        s.code.toLowerCase().includes(term) ||
+        s.date.includes(term)
+    );
+    renderTable(filtered);
+}
+
+// 6. Preview & Download
+function showPreview(data) {
+    document.getElementById('display-name').innerText = data.name;
+    document.getElementById('display-level').innerText = `${data.level} in ${data.course}`;
+    document.getElementById('display-date').innerText = formatCertDate(data.date);
+    document.getElementById('display-cert-id').innerText = data.certId;
+    document.getElementById('display-student-id').innerText = data.code;
+    
+    document.getElementById('certModal').style.display = 'block';
+}
+
+function viewFromHistory(id) {
+    const student = allStudents.find(s => s.id === id);
+    showPreview(student);
+}
+
+function closeModal() { document.getElementById('certModal').style.display = 'none'; }
+
+async function downloadOutput(type) {
+    const element = document.getElementById('certificate');
+    const canvas = await html2canvas(element, { scale: 3, useCORS: true });
+    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+    const fileName = `${document.getElementById('display-name').innerText}_Certificate`;
+
+    if(type === 'jpg') {
+        const link = document.createElement('a');
+        link.download = `${fileName}.jpg`;
+        link.href = imgData;
+        link.click();
+    } else {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+        pdf.save(`${fileName}.pdf`);
+    }
+}
+
+// Init
 window.onload = () => {
-    document.getElementById("date").value = new Date().toISOString().split('T')[0];
-    loadData();
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    loadHistory();
 };
