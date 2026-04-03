@@ -16,16 +16,16 @@
 <div class="admin-panel">
     <header>
         <h1>Chanakya Academy</h1>
-        <p>Certificate Generater</p>
+        <p>Certificate Generator</p>
     </header>
 
     <div class="grid">
+        <!-- Input Section -->
         <div class="card">
             <h2>📝 Manual Entry</h2>
             <div class="form-group">
                 <input id="name" placeholder="Student Full Name">
                 
-                <!-- Updated Level Dropdown -->
                 <select id="level">
                     <option value="" disabled selected>Select Level</option>
                     <option value="Foundation Level">Foundation Level</option>
@@ -39,11 +39,11 @@
                     <option value="Level 8">Level 8</option>
                 </select>
 
-                <!-- Proper Calendar Date Input -->
+                <label style="font-size: 12px; color: #0d2b52; display: block; margin-top: 10px;">Issue Date:</label>
                 <input type="date" id="date">
                 
-                <input id="code" placeholder="Student ID (ABX-10293)">
-                <input id="marks" placeholder="Marks/Grade">
+                <input id="code" placeholder="Student ID (e.g. ABX-10293)">
+                <input id="marks" placeholder="Marks/Grade (Optional)">
                 
                 <select id="course">
                     <option value="Abacus">Abacus</option>
@@ -53,6 +53,7 @@
             </div>
         </div>
 
+        <!-- Search Section -->
         <div class="card">
             <h2>🔍 Search Records</h2>
             <input id="searchBox" oninput="searchData()" placeholder="Search by name or ID..." class="search-input">
@@ -60,6 +61,7 @@
         </div>
     </div>
 
+    <!-- Certificate Preview -->
     <div id="cert-container" class="cert-wrapper" style="display:none;">
         <div id="certificate" class="certificate">
             <div class="corner-decoration top-left"></div>
@@ -101,4 +103,6 @@
 
 <script src="script.js"></script>
 </body>
+</html>
+
 </html>
