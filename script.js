@@ -1,4 +1,4 @@
-// 1. Firebase Configuration (Keep your existing config)
+// 1. Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyBeB6h9G7YwMhDodIPpoZIHaNyDu6-IERs",
     authDomain: "chanakya-certificates.firebaseapp.com",
@@ -10,90 +10,87 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-let students = []; // Master list
+let students = [];
 
-const listDiv = document.getElementById("list");
-const certContainer = document.getElementById("cert-container");
-
-// Load Data
+// 2. Load Data
 async function loadData() {
     try {
         const snap = await db.collection("students").get();
         students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         render(students);
-    } catch (error) {
-        console.error("Firebase Error:", error);
-    }
+    } catch (e) { console.error(e); }
 }
 
-// Render List (Fixed to use ID)
 function render(data) {
-    if (data.length === 0) {
-        listDiv.innerHTML = '<p style="text-align:center; padding:10px;">No records found.</p>';
-        return;
-    }
-    listDiv.innerHTML = data.map(s => `
+    const list = document.getElementById("list");
+    if (data.length === 0) { list.innerHTML = "<p style='padding:10px;'>No records.</p>"; return; }
+    list.innerHTML = data.sort((a,b) => a.name.localeCompare(b.name)).map(s => `
         <div class="student-item" onclick="preview('${s.id}')">
-            <strong>${s.name}</strong><br>
-            <small>${s.code} | ${s.course}</small>
+            <strong>${s.name}</strong><br><small>${s.code} | ${s.level}</small>
         </div>
     `).join("");
 }
 
-// Add Student
+// 3. Add Student
 async function addStudent() {
     const data = {
         name: document.getElementById("name").value.trim(),
-        level: document.getElementById("level").value.trim(),
-        date: document.getElementById("date").value.trim(),
+        level: document.getElementById("level").value,
+        date: document.getElementById("date").value,
         code: document.getElementById("code").value.trim(),
-        marks: document.getElementById("marks").value.trim(),
         course: document.getElementById("course").value,
         createdAt: Date.now()
     };
 
-    if (!data.name || !data.code) return alert("Fill Name and Student ID!");
+    if (!data.name || !data.level || !data.date || !data.code) return alert("Fill all fields!");
 
     try {
         await db.collection("students").add(data);
         alert("Saved!");
+        document.getElementById("name").value = "";
+        document.getElementById("code").value = "";
         loadData();
-    } catch (e) { alert("Error saving data."); }
+    } catch (e) { alert("Error saving."); }
 }
 
-// Preview (Fixed: Always finds the right student by ID)
+// 4. Preview & Format Date
 function preview(id) {
-    const s = students.find(item => item.id === id);
+    const s = students.find(x => x.id === id);
     if (!s) return;
 
-    document.getElementById("cname").innerText = s.name;
-    document.getElementById("clevel_display").innerText = `${s.level} in ${s.course}`;
-    document.getElementById("cdate").innerText = s.date;
-    document.getElementById("ccode").innerText = s.code;
-    document.getElementById("ccertid").innerText = `CERT-${new Date().getFullYear()}-${s.code}`;
+    const d = new Date(s.date);
+    const formattedDate = d.toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' });
 
-    certContainer.style.display = "block";
-    certContainer.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById("cname").innerText = s.name.toUpperCase();
+    document.getElementById("clevel_display").innerText = `${s.level} in ${s.course}`;
+    document.getElementById("cdate").innerText = formattedDate;
+    document.getElementById("ccode").innerText = s.code;
+    document.getElementById("ccertid").innerText = `CERT-2026-${s.code.split('-').pop()}`;
+
+    document.getElementById("cert-container").style.display = "block";
+    document.getElementById("cert-container").scrollIntoView({ behavior: 'smooth' });
 }
 
-// Search
+// 5. Search
 function searchData() {
     const term = document.getElementById("searchBox").value.toLowerCase();
-    const filtered = students.filter(s => 
-        s.name.toLowerCase().includes(term) || s.code.toLowerCase().includes(term)
-    );
-    render(filtered);
+    render(students.filter(s => s.name.toLowerCase().includes(term) || s.code.toLowerCase().includes(term)));
 }
 
-// Download PDF
+// 6. PDF Download
 async function downloadPDF() {
-    const { jsPDF } = window.jspdf;
+    const btn = document.querySelector(".btn-download");
+    btn.innerText = "Generating...";
     const canvas = await html2canvas(document.getElementById("certificate"), { scale: 3 });
     const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-    
-    pdf.addImage(imgData, "PNG", 0, 0, 297, 210); // A4 Landscape size
-    pdf.save(`${document.getElementById("cname").innerText}_Certificate.pdf`);
+    const pdf = new jspdf.jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    pdf.addImage(imgData, "PNG", 0, 0, 297, 210);
+    pdf.save(`${document.getElementById("cname").innerText}.pdf`);
+    btn.innerText = "📥 Download for Printing";
 }
 
-window.onload = loadData;
+// 7. Initialize with Today's Date
+window.onload = () => {
+    document.getElementById("date").value = new Date().toISOString().split('T')[0];
+    loadData();
+};
